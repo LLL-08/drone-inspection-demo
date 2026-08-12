@@ -17,9 +17,42 @@ npm run dev
 
 Vite 会在 GitHub Actions 中自动使用仓库名作为 `base`，例如仓库名为 `drone-inspection-demo` 时，资源路径会使用 `/drone-inspection-demo/`。
 
+本地 Git 初始化与推送命令：
+
+```bash
+git init
+git branch -M main
+git add .
+git commit -m "chore: prepare drone inspection demo deployment"
+git remote add origin https://github.com/<你的用户名>/<仓库名>.git
+git push -u origin main
+```
+
 ## Linux + Nginx
 
 先在服务器构建并上传 `dist`，再将 `deploy/nginx.conf` 复制到 Nginx 配置目录，并把 `server_name` 和 `root` 替换为实际值。该配置包含静态资源缓存和 SPA 刷新回退。
+
+Ubuntu 示例：
+
+```bash
+sudo apt update
+sudo apt install -y nginx git curl
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+node -v
+npm -v
+
+git clone https://github.com/<你的用户名>/<仓库名>.git /opt/drone-inspection-demo
+cd /opt/drone-inspection-demo
+npm ci
+npm run build
+sudo mkdir -p /var/www/drone-inspection-demo
+sudo cp -r dist/. /var/www/drone-inspection-demo/
+sudo cp deploy/nginx.conf /etc/nginx/sites-available/drone-inspection-demo
+sudo ln -s /etc/nginx/sites-available/drone-inspection-demo /etc/nginx/sites-enabled/drone-inspection-demo
+sudo nginx -t
+sudo systemctl reload nginx
+```
 
 ## 推荐演示路径
 
