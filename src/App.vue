@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { LayoutDashboard, FolderKanban, ClipboardList, Plane, ScanSearch, ShieldCheck, GitCompare, FileText, Bell, Search, ChevronDown, Plus, Upload, Check, X, RotateCcw, MapPin, CalendarDays, Clock3, ArrowUpRight, Menu, UserRound, Settings2, CloudUpload, Sparkles } from 'lucide-vue-next'
+import { LayoutDashboard, FolderKanban, ClipboardList, Plane, ScanSearch, ShieldCheck, GitCompare, FileText, Bell, Search, ChevronDown, Plus, Upload, Check, X, RotateCcw, MapPin, CalendarDays, Clock3, ArrowUpRight, Menu, UserRound, Settings2, CloudUpload, Sparkles, History, PackageCheck, Send, Eye } from 'lucide-vue-next'
 
 const loggedIn = ref(false)
 const active = ref('dashboard')
@@ -11,44 +11,87 @@ const uploadDone = ref(false)
 const toast = ref('')
 const query = ref('')
 const issueFilter = ref('全部')
+const roleKey = ref('manager')
+const showRoleMenu = ref(false)
+const showProjectDetail = ref(false)
+const showTaskDetail = ref(false)
+const selectedProjectId = ref('PRJ-HDN-001')
+const selectedTaskId = ref('TASK-20260812-001')
+const reportStatus = ref('待负责人审核')
+const logs = ref([
+  {time:'2026-08-12 11:20',role:'检查人员',text:'完成影像归档校验，任务进入待AI分析'},
+  {time:'2026-08-12 10:05',role:'无人机飞手',text:'上传28份现场资料（照片、视频、飞行记录）'},
+  {time:'2026-08-12 09:00',role:'调度人员',text:'确认张伟 / DJI Mavic 3E执行任务'},
+  {time:'2026-08-11 16:30',role:'项目负责人',text:'由月度巡检计划生成任务'},
+])
+const roles = {
+  manager:{label:'项目负责人',short:'负',desc:'项目交付与报告审核'},
+  dispatcher:{label:'调度人员',short:'调',desc:'任务排班与资源调度'},
+  pilot:{label:'无人机飞手',short:'飞',desc:'现场执行与资料上传'},
+  inspector:{label:'检查人员',short:'检',desc:'影像复核与问题审核'},
+  admin:{label:'系统管理员',short:'管',desc:'账号、权限与审计'},
+}
+const currentRole = computed(()=>roles[roleKey.value])
 
 const nav = [
-  { key:'dashboard', label:'首页驾驶舱', icon:LayoutDashboard },
-  { key:'projects', label:'巡检项目', icon:FolderKanban },
-  { key:'tasks', label:'巡检任务', icon:ClipboardList },
+  { key:'dashboard', label:'巡检工作台', icon:LayoutDashboard, roles:Object.keys(roles) },
+  { key:'projects', label:'项目与区域', icon:FolderKanban, roles:['manager','dispatcher','inspector','admin'] },
+  { key:'tasks', label:'任务调度', icon:ClipboardList, roles:['manager','dispatcher','pilot','inspector','admin'] },
   { key:'fleet', label:'飞手与设备', icon:Plane },
-  { key:'ai', label:'AI影像分析', icon:ScanSearch, badge:'重点' },
-  { key:'issues', label:'问题审核', icon:ShieldCheck },
-  { key:'history', label:'历史对比', icon:GitCompare },
-  { key:'reports', label:'报告管理', icon:FileText },
+  { key:'ai', label:'AI影像分析', icon:ScanSearch, badge:'辅助', roles:['manager','pilot','inspector','admin'] },
+  { key:'issues', label:'问题审核', icon:ShieldCheck, roles:['manager','inspector','admin'] },
+  { key:'history', label:'历史对比', icon:GitCompare, roles:['manager','inspector','admin'] },
+  { key:'reports', label:'报告交付', icon:FileText, roles:['manager','inspector','admin'] },
 ]
+nav[3].roles=['manager','dispatcher','admin']
+const visibleNav = computed(()=>nav.filter(item=>item.roles.includes(roleKey.value)))
 const projects = ref([
-  {name:'华东新能源科技园一期', client:'华东新能源科技有限公司', area:'园区A区 / 组件区01-08', cycle:'月度巡检', status:'巡检中', manager:'李晨', progress:72, date:'2026-08-12'},
-  {name:'苏州工业园区屋顶光伏', client:'苏州工业园区发展集团', area:'5号厂房 / 屋顶', cycle:'季度巡检', status:'待执行', manager:'王欣', progress:18, date:'2026-08-18'},
-  {name:'浦东国际机场配套建筑', client:'上海机场建设指挥部', area:'T3航站楼 / 屋面', cycle:'专项巡检', status:'已完成', manager:'周然', progress:100, date:'2026-08-08'},
-  {name:'临港产业园分布式电站', client:'临港产业区运营中心', area:'一期 / 逆变器区', cycle:'月度巡检', status:'待执行', manager:'陈凯', progress:0, date:'2026-08-22'},
+  {id:'PRJ-HDN-001', name:'华东新能源科技园一期', client:'华东新能源科技有限公司', area:'A区 / 组件区01-08', cycle:'月度巡检', status:'执行中', manager:'李晨', progress:72, date:'2026-08-12', regions:8, standard:'光伏组件外观与热成像检查', plan:'2026年8月月度巡检计划'},
+  {id:'PRJ-SZ-002', name:'苏州工业园区屋顶光伏', client:'苏州工业园区发展集团', area:'5号厂房 / 屋顶', cycle:'季度巡检', status:'待执行', manager:'王欣', progress:18, date:'2026-08-18', regions:3, standard:'屋面组件与排水检查', plan:'2026年第三季度巡检计划'},
+  {id:'PRJ-PD-003', name:'浦东国际机场配套建筑', client:'上海机场建设指挥部', area:'T3航站楼 / 屋面', cycle:'专项巡检', status:'已完成', manager:'周然', progress:100, date:'2026-08-08', regions:2, standard:'建筑屋面裂缝与锈蚀检查', plan:'机场屋面专项检查计划'},
+  {id:'PRJ-LG-004', name:'临港产业园分布式电站', client:'临港产业区运营中心', area:'一期 / 逆变器区', cycle:'月度巡检', status:'规划中', manager:'陈凯', progress:0, date:'2026-08-22', regions:5, standard:'逆变器与组件异常检查', plan:'2026年8月月度巡检计划'},
 ])
 const tasks = ref([
-  {id:'TASK-20260812-001', project:'华东新能源科技园一期', area:'A区 / 组件区01-04', date:'2026-08-12 09:00', pilot:'张伟', drone:'DJI Mavic 3E', status:'执行中'},
-  {id:'TASK-20260812-002', project:'华东新能源科技园一期', area:'A区 / 组件区05-08', date:'2026-08-12 13:30', pilot:'李浩', drone:'DJI Mavic 3T', status:'待执行'},
-  {id:'TASK-20260808-006', project:'浦东国际机场配套建筑', area:'T3 / 西侧屋面', date:'2026-08-08 10:00', pilot:'赵磊', drone:'DJI Matrice 30T', status:'已完成'},
-  {id:'TASK-20260805-003', project:'苏州工业园区屋顶光伏', area:'5号厂房 / 屋顶', date:'2026-08-05 08:30', pilot:'张伟', drone:'DJI Mavic 3E', status:'已完成'},
+  {id:'TASK-20260812-001', projectId:'PRJ-HDN-001', project:'华东新能源科技园一期', area:'A区 / 组件区03', regionCode:'A-03', date:'2026-08-12 09:00', pilot:'张伟', drone:'DJI Mavic 3E', status:'待AI分析', files:28, expectedFiles:28, plan:'2026年8月月度巡检计划', note:'完成组件区03 RGB及热成像采集，关注遮挡、裂缝、积水和锈蚀。'},
+  {id:'TASK-20260812-002', projectId:'PRJ-HDN-001', project:'华东新能源科技园一期', area:'A区 / 组件区05-08', regionCode:'A-05~08', date:'2026-08-12 13:30', pilot:'李浩', drone:'DJI Mavic 3T', status:'待执行', files:0, expectedFiles:30, plan:'2026年8月月度巡检计划', note:'按任务包完成组件区05-08巡检。'},
+  {id:'TASK-20260808-006', projectId:'PRJ-PD-003', project:'浦东国际机场配套建筑', area:'T3 / 西侧屋面', regionCode:'T3-W', date:'2026-08-08 10:00', pilot:'赵磊', drone:'DJI Matrice 30T', status:'已完成', files:19, expectedFiles:19, plan:'机场屋面专项检查计划', note:'专项检查已完成并归档。'},
+  {id:'TASK-20260805-003', projectId:'PRJ-SZ-002', project:'苏州工业园区屋顶光伏', area:'5号厂房 / 屋顶', regionCode:'SZ-05', date:'2026-08-05 08:30', pilot:'张伟', drone:'DJI Mavic 3E', status:'已完成', files:16, expectedFiles:16, plan:'2026年第三季度巡检计划', note:'资料已归档。'},
 ])
 const issues = ref([
-  {id:'ISS-001', loc:'A区 / 组件区03 / P-028', type:'光伏板遮挡', time:'2026-08-12 10:24', confidence:'92%', status:'待审核', color:'orange'},
-  {id:'ISS-002', loc:'A区 / 组件区03 / P-041', type:'裂缝', time:'2026-08-12 10:31', confidence:'88%', status:'待审核', color:'red'},
-  {id:'ISS-003', loc:'A区 / 组件区02 / P-017', type:'积水', time:'2026-08-12 10:46', confidence:'81%', status:'已确认', color:'blue'},
-  {id:'ISS-004', loc:'A区 / 组件区01 / P-006', type:'锈蚀', time:'2026-08-12 11:02', confidence:'76%', status:'误报', color:'gray'},
+  {id:'ISS-001', taskId:'TASK-20260812-001', loc:'A-03 / 组件排3 / P-028', type:'光伏板遮挡', time:'2026-08-12 10:24', confidence:'92%', status:'待审核', color:'orange', opinion:''},
+  {id:'ISS-002', taskId:'TASK-20260812-001', loc:'A-03 / 组件排3 / P-041', type:'裂缝', time:'2026-08-12 10:31', confidence:'88%', status:'待审核', color:'red', opinion:''},
+  {id:'ISS-003', taskId:'TASK-20260812-001', loc:'A-03 / 组件排2 / P-017', type:'积水', time:'2026-08-12 10:46', confidence:'81%', status:'已确认', color:'blue', opinion:'影像证据清晰，纳入本次报告。'},
+  {id:'ISS-004', taskId:'TASK-20260812-001', loc:'A-03 / 组件排1 / P-006', type:'锈蚀', time:'2026-08-12 11:02', confidence:'76%', status:'误报', color:'gray', opinion:'复核后判断为光照反射。'},
 ])
 const filteredIssues = computed(() => issueFilter.value === '全部' ? issues.value : issues.value.filter(x=>x.status===issueFilter.value))
+const selectedTask = computed(()=>tasks.value.find(x=>x.id===selectedTaskId.value) || tasks.value[0])
+const selectedProject = computed(()=>projects.value.find(x=>x.id===selectedProjectId.value) || projects.value[0])
+const pendingIssues = computed(()=>issues.value.filter(x=>x.status==='待审核'))
+const confirmedIssues = computed(()=>issues.value.filter(x=>['已确认','已纳入报告','人工新增'].includes(x.status)))
+const reportIssueCount = computed(()=>confirmedIssues.value.length)
 const showToast = (msg) => { toast.value=msg; setTimeout(()=>toast.value='',2400) }
-const go = (key) => { active.value=key; detailProject.value=false }
-const updateIssue = (item,status) => { item.status=status; showToast(status==='已确认'?'问题已确认，已纳入报告':'问题状态已更新') }
-const addIssue = () => { issues.value.unshift({id:`ISS-00${issues.value.length+1}`,loc:'A区 / 组件区04 / P-052',type:'人工新增问题',time:'2026-08-12 11:20',confidence:'—',status:'待审核',color:'purple'}); showAddIssue.value=false; showToast('人工问题已创建') }
+const can = (key) => visibleNav.value.some(item=>item.key===key)
+const go = (key) => { if(can(key)){ active.value=key; showProjectDetail.value=false; showTaskDetail.value=false } else showToast(`当前角色无权访问“${nav.find(x=>x.key===key)?.label || key}”`) }
+const switchRole = (key) => { roleKey.value=key; showRoleMenu.value=false; active.value='dashboard'; showToast(`已切换为${roles[key].label}，页面按角色权限展示`) }
+const addLog = (role,text) => logs.value.unshift({time:'2026-08-13 14:20',role,text})
+const statusClass = (status) => ({'执行中':'doing','已确认':'done','已完成':'done','已审核':'done','已交付':'done','已归档':'done','误报':'muted-status','规划中':'pending','待执行':'pending','待调度':'pending','待审核':'pending','待负责人审核':'pending','需复查':'review-status','资料待校验':'review-status','待AI分析':'review-status','异常/需补采':'danger-status'}[status] || 'pending')
+const openProject = (project) => { selectedProjectId.value=project.id; showProjectDetail.value=true }
+const openTask = (task) => { selectedTaskId.value=task.id; showTaskDetail.value=true }
+const startTask = (task) => { task.status='执行中'; addLog('无人机飞手',`开始执行任务 ${task.id}`); showToast('任务已开始，现场执行状态已更新') }
+const uploadFiles = () => { const task=selectedTask.value; task.files=task.expectedFiles; task.status='待AI分析'; uploadDone.value=true; addLog('无人机飞手',`上传${task.files}份现场资料，资料完整性校验通过`); showToast('资料已上传并完成任务归档校验') }
+const runAnalysis = () => { selectedTask.value.status='待问题审核'; addLog('系统','AI模拟分析完成，生成4个候选问题'); showToast('模拟AI分析完成，候选结果已提交人工审核') }
+const updateIssue = (item,status) => { item.status=status; item.opinion=status==='已确认'?'复核确认，纳入报告初稿。':status==='误报'?'人工复核后排除。':'需要补充资料或复查。'; addLog('检查人员',`将${item.id}审核为“${status}”`); showToast(status==='已确认'?'问题已确认，已纳入报告统计':`问题已标记为${status}`) }
+const addIssue = () => { issues.value.unshift({id:`ISS-00${issues.value.length+1}`,taskId:selectedTaskId.value,loc:'A-03 / 组件排4 / P-052',type:'人工新增问题',time:'2026-08-13 14:20',confidence:'—',status:'人工新增',color:'purple',opinion:'检查人员现场补充，纳入报告初稿。'}); showAddIssue.value=false; addLog('检查人员','人工新增问题并纳入报告初稿'); showToast('人工问题已创建并纳入报告统计') }
+const reviewReport = (status) => { reportStatus.value=status; addLog('项目负责人',`报告${status==='已审核'?'审核通过':'已退回修改'}`); showToast(status==='已审核'?'报告审核通过，可模拟交付':'报告已退回，等待修改') }
+const deliverReport = () => { if(reportStatus.value!=='已审核') return showToast('请先完成负责人审核'); reportStatus.value='已交付'; addLog('项目负责人','报告已模拟交付客户并记录版本'); showToast('报告已模拟交付，版本和交付记录已留痕') }
 
-const kpis=[['巡检项目','12','较上月 +2','blue'],['待执行任务','08','今日待执行','purple'],['AI发现问题','126','本月累计 +18%','orange'],['已生成报告','34','交付完成率 94%','green']]
+const kpis = computed(()=>[
+  ['巡检项目',projects.value.length,'本工作空间演示数据','blue',FolderKanban],
+  ['待我处理',roleKey.value==='inspector'?pendingIssues.value.length:tasks.value.filter(t=>['待调度','待执行','待负责人审核'].includes(t.status)).length,roleKey.value==='inspector'?'AI候选待审核':'任务与报告待办','purple',ClipboardList],
+  ['已确认问题',confirmedIssues.value.length,'进入报告统计','orange',ScanSearch],
+  ['报告状态',reportStatus.value==='已交付'?'已交付':'1',reportStatus.value==='已交付'?'已记录交付版本':reportStatus.value,'green',FileText],
+])
 const bars=[46,62,52,78,69,88,72,94,80,96,84,100]
-const typeIcon = {dashboard:LayoutDashboard,projects:FolderKanban,tasks:ClipboardList,ai:ScanSearch,issues:ShieldCheck,history:GitCompare,reports:FileText}
 </script>
 
 <template>
@@ -57,8 +100,8 @@ const typeIcon = {dashboard:LayoutDashboard,projects:FolderKanban,tasks:Clipboar
     <div class="login-form"><div class="login-form-inner"><div class="mobile-brand"><div class="brand-mark"><Plane :size="18"/></div><b>SKYWISE</b></div><p class="eyebrow">欢迎回来</p><h2>登录管理平台</h2><p class="muted">使用您的企业账号继续工作</p><label>企业账号</label><div class="input"><UserRound :size="17"/><input value="admin@skywise.cn" /></div><label>登录密码</label><div class="input"><ShieldCheck :size="17"/><input type="password" value="12345678" /></div><div class="login-options"><span><input type="checkbox" checked/> 记住我</span><a>忘记密码？</a></div><button class="primary login-btn" @click="loggedIn=true">进入平台 <ArrowUpRight :size="17"/></button><p class="demo-tip"><Sparkles :size="15"/> Demo演示账号已预填，可直接登录</p></div></div>
   </div>
   <div v-else class="app-shell">
-    <aside class="sidebar"><div class="side-brand"><div class="brand-mark"><Plane :size="19"/></div><div><b>SKYWISE</b><span>INSPECTION CLOUD</span></div></div><div class="workspace"><div class="workspace-avatar">华</div><div><b>华东巡检服务中心</b><span>企业工作空间</span></div><ChevronDown :size="15"/></div><nav><div class="nav-title">工作台</div><button v-for="item in nav" :key="item.key" :class="['nav-item',{active:active===item.key}]" @click="go(item.key)"><component :is="item.icon" :size="18"/><span>{{item.label}}</span><small v-if="item.badge">{{item.badge}}</small></button><div class="nav-title secondary">系统管理</div><button class="nav-item"><Settings2 :size="18"/><span>系统设置</span></button></nav><div class="side-bottom"><div class="storage-head"><span>存储空间</span><b>68%</b></div><div class="progress"><i style="width:68%"></i></div><span class="storage-text">340 GB / 500 GB</span></div></aside>
-    <main class="main"><header class="topbar"><div class="crumb"><Menu :size="20" class="menu-icon"/><span>平台工作台</span><b>/</b><strong>{{nav.find(x=>x.key===active)?.label}}</strong></div><div class="top-actions"><div class="search"><Search :size="17"/><input v-model="query" placeholder="搜索项目、任务或问题..."/></div><button class="icon-btn"><Bell :size="19"/><i></i></button><div class="user-menu"><div class="user-avatar">管</div><div><b>管理员</b><span>系统管理员</span></div><ChevronDown :size="15"/></div></div></header>
+    <aside class="sidebar"><div class="side-brand"><div class="brand-mark"><Plane :size="19"/></div><div><b>SKYWISE</b><span>INSPECTION CLOUD</span></div></div><div class="workspace"><div class="workspace-avatar">华</div><div><b>华东巡检服务中心</b><span>企业工作空间 · 演示数据</span></div><ChevronDown :size="15"/></div><nav><div class="nav-title">工作台</div><button v-for="item in visibleNav" :key="item.key" :class="['nav-item',{active:active===item.key}]" @click="go(item.key)"><component :is="item.icon" :size="18"/><span>{{item.label}}</span><small v-if="item.badge">{{item.badge}}</small></button><div class="nav-title secondary">系统管理</div><button v-if="roleKey==='admin'" class="nav-item" @click="showToast('基础权限与审计配置为演示占位')"><Settings2 :size="18"/><span>基础设置</span></button></nav><div class="side-bottom"><div class="storage-head"><span>对象存储（模拟）</span><b>68%</b></div><div class="progress"><i style="width:68%"></i></div><span class="storage-text">340 GB / 500 GB · 演示指标</span></div></aside>
+    <main class="main"><header class="topbar"><div class="crumb"><Menu :size="20" class="menu-icon"/><span>平台工作台</span><b>/</b><strong>{{nav.find(x=>x.key===active)?.label}}</strong></div><div class="top-actions"><div class="search"><Search :size="17"/><input v-model="query" placeholder="搜索项目、任务或问题..."/></div><button class="icon-btn" @click="showToast('当前无新的站内待办')"><Bell :size="19"/><i v-if="pendingIssues.length"></i></button><div class="user-menu role-menu-anchor" @click="showRoleMenu=!showRoleMenu"><div class="user-avatar">{{currentRole.short}}</div><div><b>{{currentRole.label}}</b><span>{{currentRole.desc}}</span></div><ChevronDown :size="15"/><div v-if="showRoleMenu" class="role-menu"><div class="role-menu-title">Demo角色切换</div><button v-for="(role,key) in roles" :key="key" :class="{selected:key===roleKey}" @click.stop="switchRole(key)"><span class="role-dot">{{role.short}}</span><span><b>{{role.label}}</b><small>{{role.desc}}</small></span><Check v-if="key===roleKey" :size="15"/></button></div></div></div></header><div class="demo-strip"><span>角色：{{currentRole.label}}</span></div>
       <div class="content">
         <section v-if="active==='dashboard'" class="page"><div class="page-title"><div><p class="eyebrow">TUESDAY, AUGUST 12, 2026</p><h1>早上好，管理员 <span>👋</span></h1><p class="muted">今天有 <b class="text-blue">8 个任务</b> 待处理，巡检中心运行正常。</p></div><button class="primary" @click="showNewProject=true"><Plus :size="17"/> 新建巡检项目</button></div><div class="kpi-grid"><div v-for="item in kpis" class="kpi card"><div class="kpi-top"><span>{{item[0]}}</span><div :class="['kpi-icon',item[3]]"><component :is="item[0]==='AI发现问题'?ScanSearch:item[0]==='已生成报告'?FileText:item[0]==='待执行任务'?ClipboardList:FolderKanban" :size="19"/></div></div><strong>{{item[1]}}</strong><span :class="['kpi-foot',item[3]]">{{item[2]}} <ArrowUpRight :size="13"/></span></div></div><div class="dashboard-grid"><div class="card chart-card"><div class="card-title"><div><h3>巡检任务趋势</h3><span>近12个月任务完成情况</span></div><button class="select">近一年 <ChevronDown :size="14"/></button></div><div class="chart"><div class="y-labels"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div><div class="chart-main"><div class="grid-lines"><i></i><i></i><i></i><i></i><i></i></div><div class="bars"><div v-for="(bar,i) in bars" class="bar-wrap"><div class="bar" :style="{height:bar+'%'}"><b v-if="i===11">{{bar}}</b></div><span>{{['9月','10月','11月','12月','1月','2月','3月','4月','5月','6月','7月','8月'][i]}}</span></div></div></div></div></div><div class="card today-card"><div class="card-title"><div><h3>今日任务</h3><span>2026年8月12日</span></div><button class="text-btn" @click="go('tasks')">查看全部 →</button></div><div class="task-mini" v-for="t in tasks.slice(0,3)"><div class="task-time"><b>{{t.date.split(' ')[1]}}</b><span>{{t.status==='执行中'?'进行中':'待执行'}}</span></div><div class="task-info"><b>{{t.area}}</b><span>{{t.pilot}} · {{t.drone}}</span></div><span :class="['status',t.status==='执行中'?'doing':'pending']">{{t.status}}</span></div></div></div><div class="card recent-card"><div class="card-title"><div><h3>最近巡检项目</h3><span>项目进展实时更新</span></div><button class="text-btn" @click="go('projects')">全部项目 →</button></div><div class="project-row" v-for="project in projects.slice(0,3)"><div class="project-symbol"><Plane :size="17"/></div><div class="project-name"><b>{{project.name}}</b><span>{{project.client}}</span></div><div class="project-area"><MapPin :size="14"/> {{project.area}}</div><div class="project-progress"><div><span>完成度</span><b>{{project.progress}}%</b></div><div class="progress"><i :style="{width:project.progress+'%'}"></i></div></div><span :class="['status',project.status==='巡检中'?'doing':project.status==='已完成'?'done':'pending']">{{project.status}}</span></div></div></section>
 
