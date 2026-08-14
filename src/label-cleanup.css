@@ -1,0 +1,6 @@
+.sidebar .mock-note{font-size:0}.sidebar .mock-note:before{content:'华东巡检服务中心';font-size:11px}.sidebar .mock-note span{font-size:0}.sidebar .mock-note span:after{content:'企业工作空间';font-size:9px}
+.role-menu-title{font-size:0}.role-menu-title:after{content:'切换岗位';font-size:11px}
+.page-heading>.tag-muted{font-size:0}.page-heading>.tag-muted:after{content:'区域影像对比';font-size:12px}
+.report-cover>span{font-size:0}.report-cover>span:after{content:'巡检报告';font-size:12px}
+.section-help{font-size:0}.section-help:after{content:'我的任务 → 外业执行 → 上传资料 → 完整性校验 → 提交任务';font-size:12px}
+.admin-card span{font-size:0}.admin-card span:after{content:'系统配置';font-size:12px}

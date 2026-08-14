@@ -1,0 +1,23 @@
+/* Fixed application shell: only the content column scrolls. */
+html,body,#app{min-height:100%;margin:0}
+.app-shell{height:100vh;overflow:hidden}
+.app-shell>.sidebar{height:100vh;position:fixed;left:0;top:0;bottom:0;z-index:20;overflow-y:auto;overflow-x:hidden}
+.main-area{margin-left:250px;height:100vh;min-height:0}
+.main-area>.topbar{position:relative;z-index:10}
+.content-area{overflow-y:auto;overflow-x:hidden;height:calc(100vh - 70px);max-height:calc(100vh - 70px)}
+.image-current,.image-history{background:#b9a77c;position:relative}
+.image-current{background:linear-gradient(180deg,#8fc7d3 0 33%,#bdad82 34% 100%)}
+.image-history{background:linear-gradient(180deg,#aebfc2 0 33%,#9d947b 34% 100%)}
+.image-surface{position:absolute;left:8%;right:8%;top:34%;bottom:-12%;display:grid;grid-template-columns:repeat(6,1fr);gap:5px;transform:skewY(-8deg) rotate(-2deg)}
+.image-surface i{display:block;border:1px solid rgba(213,239,241,.75);background:linear-gradient(145deg,#164b6a,#347e92);box-shadow:inset 0 0 0 1px rgba(15,61,84,.55)}
+.image-history .image-surface i{background:linear-gradient(145deg,#435e68,#867c61);filter:saturate(.72)}
+.image-pin{position:absolute;z-index:2;padding:5px 8px;color:#fff;background:#df6b5f;border-radius:4px;font-size:10px;font-weight:600;transform:skewY(8deg) rotate(2deg)}
+.pin-current{left:36%;top:30%}.pin-history{left:55%;top:45%;background:#668395}
+.image-current>span,.image-history>span{position:absolute;left:12px;bottom:10px;z-index:3;padding:5px 8px;border-radius:4px;background:rgba(14,40,54,.72);color:#fff;font-size:11px}
+.account-login{min-height:100vh;display:grid;grid-template-columns:1.05fr .95fr;background:#f5f8fb}
+.login-brand-panel{position:relative;display:flex;flex-direction:column;padding:36px 58px;color:#fff;overflow:hidden;background:linear-gradient(145deg,#10344e 0%,#165d6b 100%)}
+.login-brand{padding:0;color:#fff;position:relative;z-index:1}.login-brand b{font-size:16px;letter-spacing:1px}.login-brand span{display:block;color:#91cbd0;font-size:8px;letter-spacing:1.2px;margin-top:3px}
+.login-hero-copy{position:relative;z-index:1;margin:auto 0}.login-hero-copy .eyebrow{color:#8dd7cf}.login-hero-copy h1{font-size:48px;line-height:1.25;letter-spacing:-2px;margin:15px 0}.login-hero-copy h1 em{font-style:normal;color:#6ed2c5}.login-hero-copy p{max-width:360px;color:#a9d0d3;font-size:14px;line-height:1.8}
+.login-footer{position:relative;z-index:1;color:#83b2b9;font-size:10px}
+.login-form-panel{display:grid;place-items:center;background:#fff}.account-form{width:min(370px,80%)}.account-form .eyebrow{color:#348d8e}.account-form h2{margin:8px 0;color:#173a50;font-size:28px}.account-form>p{margin:0 0 30px;color:#8897a5;font-size:13px}.account-form>label{display:block;color:#526c7d;font-size:12px;font-weight:600;margin:17px 0}.account-form input[type=email],.account-form input[type=password]{display:block;width:100%;height:44px;margin-top:8px;padding:0 13px;border:1px solid #dce5ec;border-radius:7px;outline:none;color:#29465a;background:#fff}.account-form input:focus{border-color:#3a9a98;box-shadow:0 0 0 3px #3a9a9818}.login-options{display:flex;align-items:center;justify-content:space-between;margin:10px 0 22px;color:#82919d;font-size:12px}.remember{display:flex!important;align-items:center;gap:7px;margin:0!important;font-weight:400!important}.remember input{accent-color:#328e8c}.forgot-button{border:0;background:none;color:#318d8b;font-size:12px;padding:0}.login-submit{width:100%;height:44px;justify-content:center;font-size:13px}.login-security{text-align:center;color:#a2adb6;font-size:11px;margin-top:22px}
+@media(max-width:800px){.app-shell>.sidebar{display:none}.main-area{margin-left:0}.account-login{display:block}.login-brand-panel{min-height:250px;padding:28px 24px}.login-hero-copy{margin:35px 0 0}.login-hero-copy h1{font-size:32px}.login-footer{display:none}.login-form-panel{min-height:calc(100vh - 250px);padding:30px 0}.account-form{width:min(370px,calc(100% - 40px))}}

@@ -1,0 +1,6 @@
+<script setup>
+import { ShieldCheck } from 'lucide-vue-next'
+import StatusBadge from './StatusBadge.vue'
+defineProps({ pilots: Array, drones: Array })
+</script>
+<template><section class="page-stack"><div class="page-heading"><div><span class="eyebrow">RESOURCE SCHEDULING</span><h1>飞手与设备</h1><p>调度人员查看资质、设备状态并为巡检任务安排执行资源。</p></div></div><div class="split-grid"><div class="section-card table-card"><div class="section-card-title"><div><b>飞手资源</b><span>资质与区域</span></div></div><table><thead><tr><th>飞手</th><th>等级</th><th>资质有效期</th><th>负责区域</th><th>状态</th></tr></thead><tbody><tr v-for="pilot in pilots" :key="pilot.name"><td><b>{{ pilot.name }}</b></td><td>{{ pilot.level }}</td><td>{{ pilot.expiry }}</td><td>{{ pilot.area }}</td><td><StatusBadge :status="pilot.status"/></td></tr></tbody></table></div><div class="section-card table-card"><div class="section-card-title"><div><b>无人机设备</b><span>设备台账与维保</span></div></div><table><thead><tr><th>设备型号</th><th>编号</th><th>状态</th><th>维保</th></tr></thead><tbody><tr v-for="drone in drones" :key="drone.id"><td><b>{{ drone.model }}</b></td><td>{{ drone.id }}</td><td><StatusBadge :status="drone.status"/></td><td><span class="health"><ShieldCheck :size="14"/>{{ drone.maintenance }}</span></td></tr></tbody></table></div></div></section></template>

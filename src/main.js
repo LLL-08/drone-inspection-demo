@@ -1,6 +1,10 @@
 import { createApp } from 'vue'
-import App from './DemoApp.vue'
+import App from './AppRoot.vue'
 import './style.css'
 import './fleet.css'
 import './demo.css'
+import './refactor.css'
+import './layout-fix.css'
+import './final-overrides.css'
+import './label-cleanup.css'
 createApp(App).mount('#app')

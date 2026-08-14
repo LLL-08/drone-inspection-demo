@@ -1,0 +1,9 @@
+<script setup>
+import { FileText, Download, CheckCircle2 } from 'lucide-vue-next'
+import StatusBadge from './StatusBadge.vue'
+defineProps({ reportStatus: String, confirmedIssues: Array, selectedTask: Object })
+const emit = defineEmits(['review', 'deliver'])
+</script>
+<template><section class="page-stack"><div class="page-heading"><div><span class="eyebrow">REPORT DELIVERY</span><h1>报告管理</h1><p>将已审核问题汇总为报告初稿，经项目负责人审核后导出 PDF 交付客户。</p></div><div class="heading-actions"><button class="btn-secondary" @click="emit('review', '退回修改')">退回修改</button><button class="btn-primary" @click="emit('review', '已审核')"><CheckCircle2 :size="15"/>审核通过</button></div></div>
+  <div class="report-status-line"><span v-for="step in ['报告初稿','负责人审核','PDF交付','资料归档']" :key="step" class="report-step" :class="{ done: (step === '报告初稿' || reportStatus === '已审核' || reportStatus === '已交付') && step !== '资料归档', current: step === '负责人审核' && reportStatus === '待负责人审核' }">{{ step }}</span></div>
+  <div class="report-sheet"><div class="report-cover"><div class="report-logo"><FileText :size="28"/></div><span>演示数据 / 模拟报告</span><h2>华东新能源科技园一期<br/>月度无人机巡检报告</h2><p>报告对象：{{ selectedTask?.area }}<br/>任务编号：{{ selectedTask?.id }}<br/>生成时间：2026-08-14</p><StatusBadge :status="reportStatus"/></div><div class="report-body"><div class="report-summary"><div><span>审核问题</span><strong>{{ confirmedIssues.length }}</strong></div><div><span>报告状态</span><strong>{{ reportStatus }}</strong></div><div><span>交付方式</span><strong>PDF文件</strong></div></div><h3>问题汇总</h3><div v-for="issue in confirmedIssues" :key="issue.id" class="report-issue"><span class="issue-marker" :class="issue.color"></span><div><b>{{ issue.type }}</b><p>{{ issue.location }} · {{ issue.opinion }}</p></div><StatusBadge :status="issue.status"/></div><div class="report-actions"><button class="btn-secondary" @click="emit('deliver')"><Download :size="15"/>导出并记录PDF交付</button><small>客户一期不登录平台，交付记录留在系统档案中。</small></div></div></div></section></template>
